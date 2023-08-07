@@ -9,6 +9,11 @@ var app = http.createServer(function (request, response) {
     var pathname = url.parse(_url, true).pathname;
     // 2.1.3. if user requests the root path
     if (pathname === '/') {
+//root path code        
+    }// 2.1.4. if user requests the path other than root
+    else {
+//other path code        
     }
+    
     
 
