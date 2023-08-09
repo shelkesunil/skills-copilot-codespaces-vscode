@@ -74,9 +74,4 @@ io.on('connection', (socket) => {
     socket.on('comment', (comment) => {
         io.emit('comment', comment);
     });
-    socket.on('like', (like) => {
-        io.emit('like', like);
-    });
-    socket.on('friend', (friend) => {
-        io.emit('friend', friend);
-    }   );
+});
