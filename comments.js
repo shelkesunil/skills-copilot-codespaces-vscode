@@ -1,77 +1,42 @@
-// create web server with express
+// Create web server application
 const express = require('express');
 const app = express();
-// create server with http
-const http = require('http');
-const server = http.createServer(app);
-// create socket server
-const socketIO = require('socket.io');
-const io = socketIO(server);
-// create router
-const router = express.Router();
-// create body parser
-const bodyParser = require('body-parser');
-// create cors
 const cors = require('cors');
-// create mongoose
-const mongoose = require('mongoose');
-// create config
-const config = require('./config/database');
-// create path
-const path = require('path');
-// create authentication middleware
-const authentication = require('./middleware/authentication');
-// create routes
-const comments = require('./routes/comments');
-const users = require('./routes/users');
-const posts = require('./routes/posts');
-const likes = require('./routes/likes');
-const friends = require('./routes/friends');
-const conversations = require('./routes/conversations');
-const messages = require('./routes/messages');
-// create port
-const port = process.env.PORT || 3000;
-// connect to database
-mongoose.connect(config.database);
-// on connection
-mongoose.connection.on('connected', () => {
-    console.log('Connected to database ' + config.database);
-});
-// on error
-mongoose.connection.on('error', (err) => {
-    console.log('Database error: ' + err);
-});
-// use body parser
-app.use(bodyParser.json());
-// use cors
+const bodyParser = require('body-parser');
+const { randomBytes } = require('crypto');
+
+// Enable CORS
 app.use(cors());
-// use authentication
-app.use(authentication);
-// use routes
-app.use('/comments', comments);
-app.use('/users', users);
-app.use('/posts', posts);
-app.use('/likes', likes);
-app.use('/friends', friends);
-app.use('/conversations', conversations);
-app.use('/messages', messages);
-// set static folder
-app.use(express.static(path.join(__dirname, 'public')));
-// index route
-app.get('/', (req, res) => {
-    res.send('Invalid Endpoint');
+
+// Enable body-parser
+app.use(bodyParser.json());
+
+// In-memory data
+const commentsByPostId = {};
+
+// Define routes
+app.get('/posts/:id/comments', (req, res) => {
+  res.send(commentsByPostId[req.params.id] || []);
 });
-// start server
-server.listen(port, () => {
-    console.log('Server started on port ' + port);
+
+app.post('/posts/:id/comments', async (req, res) => {
+  const commentId = randomBytes(4).toString('hex');
+  const { content } = req.body;
+
+  // Get comments from in-memory data
+  const comments = commentsByPostId[req.params.id] || [];
+
+  // Push new comment to comments array
+  comments.push({ id: commentId, content });
+
+  // Update in-memory data
+  commentsByPostId[req.params.id] = comments;
+
+  // Return new comment
+  res.status(201).send(comments);
 });
-// socket io
-io.on('connection', (socket) => {
-    console.log('user connected');
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
-    socket.on('comment', (comment) => {
-        io.emit('comment', comment);
-    });
+
+// Listen on port 4001
+app.listen(4001, () => {
+  console.log('Listening on 4001');
 });
